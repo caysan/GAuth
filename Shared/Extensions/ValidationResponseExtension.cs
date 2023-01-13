@@ -14,7 +14,7 @@ namespace Shared.Extensions
                 {
                     var errors = context.ModelState.Values.Where(w => w.Errors.Count > 0).SelectMany(s => s.Errors).Select(s => s.ErrorMessage);
 
-                    var response = Response<string>.Fail(new Error(errors.ToList(), true), 400);
+                    var response = Response<string>.Fail(new Error(errors.ToList()), 400);
 
                     return new BadRequestObjectResult(response);
                 };

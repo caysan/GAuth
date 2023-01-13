@@ -28,94 +28,88 @@ namespace Service.Services
 
         public async Task<Response<Token>> CreateTokenByUserAsync(SignInByUser signIn)
         {
-            if (signIn == null)
+            if (signIn == null || string.IsNullOrWhiteSpace(signIn.UserName) || string.IsNullOrWhiteSpace(signIn.Password))
             {
-                throw new ArgumentNullException(nameof(signIn));
+                return Response<Token>.Fail("Kullanýcý adý ve þifresi giriniz");
             }
 
-            var user = await _userManager.FindByNameAsync(signIn.UserName);
+            //Kullanýcý adý ve þifre ile, DB User bilgileri üzerinden token oluþturulur.
+            AppUser user = await _userManager.FindByNameAsync(signIn.UserName);
             if (user == null)
             {
-                return Response<Token>.Fail("Username or password is invalid.", 404);
+                return Response<Token>.Fail("Geçersiz kullanýcý adý ve þifre.", 404);
             }
 
             if (!await _userManager.CheckPasswordAsync(user, signIn.Password))
             {
-                return Response<Token>.Fail("Username or password is invalid.", 404);
+                return Response<Token>.Fail("Geçersiz kullanýcý adý ve þifre.", 404);
             }
 
-            var token = _tokenService.CreateToken(user);
-            var userRefreshToken = await _userRefreshTokenRepository.Where(w => w.UserId == user.Id).SingleOrDefaultAsync();
-            if (userRefreshToken == null)
-            {
-                await _userRefreshTokenRepository.AddAsync(new UserRefreshToken
-                {
-                    UserId = user.Id,
-                    Token = token.RefreshToken,
-                    Expiration = token.RefreshTokenExpiration
-                });
-            }
-            else
-            {
-                userRefreshToken.Token = token.RefreshToken;
-                userRefreshToken.Expiration = token.RefreshTokenExpiration;
-            }
+            return await TokenOlustur(user);
 
-            await _unitOfWork.CommitAsync();
-
-            return Response<Token>.Success(token, 200);
+            //var token = _tokenService.CreateToken(user);
+            //var userRefreshToken = await _userRefreshTokenRepository.Where(w => w.UserId == user.Id).SingleOrDefaultAsync();
+            //if (userRefreshToken == null)
+            //{
+            //    await _userRefreshTokenRepository.AddAsync(new UserRefreshToken
+            //    {
+            //        UserId = user.Id,
+            //        Token = token.RefreshToken,
+            //        Expiration = token.RefreshTokenExpiration
+            //    });
+            //}
+            //else
+            //{
+            //    userRefreshToken.Token = token.RefreshToken;
+            //    userRefreshToken.Expiration = token.RefreshTokenExpiration;
+            //}
+            //await _unitOfWork.CommitAsync();
+            //return Response<Token>.Success(token, 200);
         }
 
         public async Task<Response<Token>> CreateTokenByLdapAsync(SignInByLdap signIn)
         {
-            if (signIn == null)
+            if (signIn == null || string.IsNullOrWhiteSpace(signIn.UserName) || string.IsNullOrWhiteSpace(signIn.Password))
             {
-                throw new ArgumentNullException(nameof(signIn));
+                return Response<Token>.Fail("Kullanýcý adý ve þifresi giriniz");
             }
 
-            //var user = await _userManager.FindByNameAsync(signIn.UserName);
-            //if (user == null)
-            //{
-            //    return Response<Token>.Fail("Username or password is invalid.", 404, true);
-            //}
 
-            //if (!await _userManager.CheckPasswordAsync(user, signIn.Password))
-            //{
-            //    return Response<Token>.Fail("Username or password is invalid.", 404, true);
-            //}
+            #region LDAP Doðrulama
+            //TODO: Bu bölümde LDAP ile kullanýcý kontrolü yapýlacak.
+            LdapUser ldapUser = new LdapUser(){ LdapUserName="cuneyt1" };
+            //TODO: Eðer login baþarýlý ise, _userManager.FindByNameAsync ile kullanýcý bak. varsa devam et, yoksa yeni _userManager.CreateAsync oluþtur.
+            #endregion
 
-            var token = _tokenService.CreateToken(user);
-            var userRefreshToken = await _userRefreshTokenRepository.Where(w => w.UserId == user.Id).SingleOrDefaultAsync();
-            if (userRefreshToken == null)
+            #region ldap doðrulama sonrasý Kullanýcýnýn user tablosunun oluþturulmasý.
+            var user = await _userManager.FindByNameAsync(ldapUser.LdapUserName);
+            if (user == null)
             {
-                await _userRefreshTokenRepository.AddAsync(new UserRefreshToken
+                var newAppUser = new AppUser() { 
+                    UserName = ldapUser.LdapUserName,
+                    Email = ""
+                };
+                var resultCreateUser = await _userManager.CreateAsync(newAppUser);
+                if (!resultCreateUser.Succeeded)
                 {
-                    UserId = user.Id,
-                    Token = token.RefreshToken,
-                    Expiration = token.RefreshTokenExpiration
-                });
+                    return Response<Token>.Fail(new Error(resultCreateUser.Errors.Select(s => s.Description).ToList()), 404);
+                }
             }
-            else
-            {
-                userRefreshToken.Token = token.RefreshToken;
-                userRefreshToken.Expiration = token.RefreshTokenExpiration;
-            }
+            #endregion
 
-            await _unitOfWork.CommitAsync();
 
-            return Response<Token>.Success(token, 200);
+            return await TokenOlustur(user);
         }
 
 
 
 
-        private async Task<Response<string>> TokenOlustur(string userName)
+        private async Task<Response<Token>> TokenOlustur(AppUser user)
         {
-            if (string.IsNullOrWhiteSpace(userName))
+            if (user==null || string.IsNullOrWhiteSpace(user.UserName))
             {
-                return Response<string>.Fail("Kullanýcý adý girilmeli",);
+                return Response<Token>.Fail("Kullanýcý adý girilmeli");
             }
-
 
             var token = _tokenService.CreateToken(user);
             var userRefreshToken = await _userRefreshTokenRepository.Where(w => w.UserId == user.Id).SingleOrDefaultAsync();

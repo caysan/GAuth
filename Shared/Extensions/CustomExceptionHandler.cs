@@ -24,14 +24,16 @@ namespace Shared.Extensions
                         var ex = errorFeature.Error;
 
                         Error error;
-                        if (ex is CustomException)
-                        {
-                            error = new Error(ex.Message, true);
-                        }
-                        else
-                        {
-                            error = new Error(ex.Message, false);
-                        }
+                        error = new Error(ex.Message);
+
+                        //if (ex is CustomException)
+                        //{
+                        //    error = new Error(ex.Message);
+                        //}
+                        //else
+                        //{
+                        //    error = new Error(ex.Message);
+                        //}
 
                         var response = Response<string>.Fail(error, 500);
 

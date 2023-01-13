@@ -27,7 +27,7 @@ namespace Service.Services
             var result = await _userManager.CreateAsync(user, createUser.Password);
             if (!result.Succeeded)
             {
-                return Response<User>.Fail(new Error(result.Errors.Select(s => s.Description).ToList(), true), 404);
+                return Response<User>.Fail(new Error(result.Errors.Select(s => s.Description).ToList()), 404);
             }
             return Response<User>.Success(ObjectMapper.Mapper.Map<User>(user), 200);
         }
