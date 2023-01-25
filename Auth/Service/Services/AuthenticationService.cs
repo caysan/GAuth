@@ -2,6 +2,7 @@ using Core.Interfaces;
 using Core.Models.Business;
 using Core.Models.Dto;
 using Core.Models.Entities;
+using Data.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -15,9 +16,9 @@ namespace Service.Services
         private readonly ITokenService _tokenService;
         private readonly List<Client> _clients;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IGenericRepository<UserRefreshToken> _userRefreshTokenRepository;
+        private readonly IGenericRepository<UserRefreshTokens> _userRefreshTokenRepository;
 
-        public AuthenticationService(UserManager<AppUser> userManager, ITokenService tokenService, IUnitOfWork unitOfWork, IGenericRepository<UserRefreshToken> userRefreshTokenRepository, IOptions<List<Client>> clients)
+        public AuthenticationService(UserManager<AppUser> userManager, ITokenService tokenService, IUnitOfWork unitOfWork, IGenericRepository<UserRefreshTokens> userRefreshTokenRepository, IOptions<List<Client>> clients)
         {
             _userManager = userManager;
             _tokenService = tokenService;
@@ -115,7 +116,7 @@ namespace Service.Services
             var userRefreshToken = await _userRefreshTokenRepository.Where(w => w.UserId == user.Id).SingleOrDefaultAsync();
             if (userRefreshToken == null)
             {
-                await _userRefreshTokenRepository.AddAsync(new UserRefreshToken
+                await _userRefreshTokenRepository.AddAsync(new UserRefreshTokens
                 {
                     UserId = user.Id,
                     Token = token.RefreshToken,

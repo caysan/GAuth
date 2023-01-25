@@ -4,6 +4,6 @@ namespace Core.Models.Entities
 {
     public class AppUser : IdentityUser
     {
-        //public string? City { get; set; }
+        //public string? ***** { get; set; }
     }
 }

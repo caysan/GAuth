@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : BaseController
@@ -16,14 +17,15 @@ namespace Api.Controllers
             _userService = userService;
         }
 
+        [AllowAnonymous]
         [HttpPost(nameof(CreateUser))]
         public async Task<IActionResult> CreateUser(CreateUser createUser)
         {
             return ActionResultInstance(await _userService.CreateUserAsync(createUser));
         }
 
+        
         [HttpGet(nameof(GetUserByAktifUser))]
-        [Authorize]
         public async Task<IActionResult> GetUserByAktifUser()
         {
             return ActionResultInstance(await _userService.GetUserByNameAsync(User?.Identity?.Name!));

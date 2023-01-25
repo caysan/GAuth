@@ -10,14 +10,15 @@ namespace Api.Controllers
     [Route("api/[controller]")]
     public class TestApiController : BaseController
     {
-        private readonly IGenericService<Core.Models.Entities.Product, Core.Models.Dto.Product> _productService;
+        private readonly IGenericService<Data.Models.Products, Core.Models.Dto.Product> _productService;
 
-        public TestApiController(IGenericService<Core.Models.Entities.Product, Core.Models.Dto.Product> productService)
+        public TestApiController(IGenericService<Data.Models.Products, Core.Models.Dto.Product> productService)
         {
             _productService = productService;
         }
 
-        [HttpGet]
+        [HttpGet("GetListAnonym")]
+        [AllowAnonymous]
         public async Task<IActionResult> Get()
         {
             return ActionResultInstance(await _productService.GetAllAsync());

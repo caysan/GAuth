@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ namespace Shared.Extensions
             //todo: JwtBearerEvents kýsmýnda kullanýcý.aktiftoken=token bilgisi kontrolü yap.
             //bir kullanýcý için ayný anda bir token oluþturulmasýný, kullanici.aktiftoken verisi ile tek token kullanýlmasý, signout ile SSO özelliði katýlabilir.
 
+            //token doðrulanmýþsa burasý tetiklenir
             OnTokenValidated = context =>
             {
                 //ctx.SecurityToken.ToString()
@@ -29,28 +31,39 @@ namespace Shared.Extensions
             
             OnAuthenticationFailed = context =>
             {
-                //yetkisis iþlem talebinde page status kodu 401 gitmesin, 200 gitsin. dönüþ model olarak detaylý dönsün.
-                context.Response.StatusCode = StatusCodes.Status200OK;
-                context.Response.ContentType = "text/plain";
-                context.Response.WriteAsJsonAsync(Response<string>.Fail("Yetkisiz giriþ denemesi", 401));
+                //context.Response.StatusCode = StatusCodes.Status200OK;
+                //context.Response.ContentType = "application/json";
+                //return Task.CompletedTask;
+                //context.Response.WriteAsJsonAsync(Response<string>.Fail("Yetkisiz giriþ denemesi", 401));
                 return Task.CompletedTask;
             },
 
+            //hatalý durumlarda OnAuthenticationFailed dan sonra tetiklenir.
             OnChallenge = context =>
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                //yetkisiz iþlem talebinde page status kodu 401 gitmesin, 200 gitsin. dönüþ model olarak detaylý dönsün.
+                context.HandleResponse();
+                var statusCode = context.Response.StatusCode;
+                context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
+               //return context.Response.WriteAsync("An error occurred processing your authentication.");
+                return context.Response.WriteAsJsonAsync(Response<string>.Fail("Yetkisiz giriþ denemesi", statusCode));
+                //context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                //context.Response.ContentType = "text/plain";
                 //ctx.Response.WriteAsync(message);
-                return Task.CompletedTask;
+                //return Task.CompletedTask;
             },
 
+            //Tüm gelen validation bilgileri burayý tetitkler
             OnMessageReceived = context =>
             {
-                context.Request.Headers.TryGetValue("Authorization", out var BearerToken);
-                if (BearerToken.Count == 0)
-                    BearerToken = "no Bearer token sent\n";
+
+                //context.Request.Headers.TryGetValue("Authorization", out var BearerToken);
+                //if (BearerToken.Count == 0)
+                //    BearerToken = "no Bearer token sent\n";
                 return Task.CompletedTask;
             }
+
         };
 
 
@@ -79,12 +92,8 @@ namespace Shared.Extensions
                     };
 
                     options.Events = jwtEvents;
-                    
-                    //options.Events = new JwtBearerEvents
-                    //{
-                    //    OnTokenValidated = ctx => Task.CompletedTask,
-                    //    OnAuthenticationFailed = ctx => Task.CompletedTask
-                    //};
+
+                  
 
                 });
         }

@@ -2,6 +2,7 @@ using Core.Models.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Data.Models;
 
 namespace Data
 {
@@ -9,8 +10,8 @@ namespace Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
-        public DbSet<Product> Products => Set<Product>();
+        public DbSet<UserRefreshTokens> UserRefreshTokens => Set<UserRefreshTokens>();
+        public DbSet<Products> Products => Set<Products>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
